@@ -4,12 +4,14 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 
 typedef OpenedNotificationHandler = void Function(Map openedResult);
+typedef ForegroundNotificationHandler = void Function(Map notificationData);
 
 // ignore: avoid_classes_with_only_static_members
 class IterableFlutter {
   static const MethodChannel _channel = MethodChannel('iterable_flutter');
 
   static OpenedNotificationHandler? _onOpenedNotification;
+  static ForegroundNotificationHandler? _onForegroundNotification;
 
   static Future<void> initialize({
     required String apiKey,
@@ -69,6 +71,11 @@ class IterableFlutter {
     _onOpenedNotification = handler;
   }
 
+  // ignore: use_setters_to_change_properties
+  static void setForegroundNotificationHandler(ForegroundNotificationHandler handler) {
+    _onForegroundNotification = handler;
+  }
+
   static Future<dynamic> nativeMethodCallHandler(MethodCall methodCall) async {
     final arguments = methodCall.arguments as Map<dynamic, dynamic>;
     final argumentsCleaned = sanitizeArguments(arguments);
@@ -77,6 +84,9 @@ class IterableFlutter {
       case "openedNotificationHandler":
         _onOpenedNotification?.call(argumentsCleaned);
         return "This data from native.....";
+      case "foregroundNotificationReceived":
+        _onForegroundNotification?.call(argumentsCleaned);
+        return "Foreground notification handled";
       default:
         return "Nothing";
     }
