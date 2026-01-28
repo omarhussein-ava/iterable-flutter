@@ -116,7 +116,20 @@ public class SwiftIterableFlutterPlugin: NSObject, FlutterPlugin, UNUserNotifica
             }
     }
     
-    public func userNotificationCenter(_: UNUserNotificationCenter, willPresent _: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+    public func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        // Send notification data to Flutter when received in foreground
+        let userInfo = notification.request.content.userInfo
+        if let apsInfo = userInfo["aps"] as? [String: AnyObject],
+           let alertInfo = apsInfo["alert"] as? [String: AnyObject] {
+            let payload = [
+                "title": alertInfo["title"] ?? "",
+                "body": alertInfo["body"] ?? "",
+                "additionalData": userInfo
+            ] as [String : Any]
+
+            SwiftIterableFlutterPlugin.channel?.invokeMethod("foregroundNotificationReceived", arguments: payload)
+        }
+
         completionHandler([.badge, .sound, .alert])
     }
     
